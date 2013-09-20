@@ -19,8 +19,32 @@
 # limitations under the License.
 #
 
+execute "update apt" do
+  command "apt-get update -q -y|cat"
+end
+
+cookbook_file "/etc/apt/apt.conf" do
+  source "apt.conf"
+  group "root"
+  owner "vagrant"
+  mode "0644"
+end
+
+package "libxslt1-dev" do
+  action :install
+
+end
+
+package "python-lxml" do
+  action :install
+end
+
 package "mongodb" do
   action :install
+end
+
+package "mongodb" do
+  action :upgrade
 end
 
 needs_mongo_gem = (node.recipes.include?("mongodb::replicaset") or node.recipes.include?("mongodb::mongos"))
