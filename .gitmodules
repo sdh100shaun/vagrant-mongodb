@@ -1,0 +1,3 @@
+[submodule "vagrant/cookbooks/mongodb"]
+	path = vagrant/cookbooks/mongodb
+	url = git@github.com:edelight/chef-mongodb.git
