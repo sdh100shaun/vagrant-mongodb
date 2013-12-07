@@ -1,20 +1,39 @@
 
+configjson = {
+  :network_ips => { 
+    :mongo => "192.168.50.10",
+    
+  },
+  :proxy => {
+    :http_proxy => ""
+  }
+}
+Vagrant.configure("2") do |config|
 
-Vagrant::Config.run do |config|
+  config.vm.define :mongo do |app|
+    app.vm.box = "precise64"
+    app.vm.box_url = "http://files.vagrantup.com/precise64.box"
 
-  config.vm.box = "precise64"
-  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
-  
+    app.vm.hostname = "db.local"
+    app.vm.network :private_network, ip: configjson[:network_ips][:mongo]
 
-  config.vm.network :hostonly, "192.168.50.1"
-  config.vm.forward_port 27017, 27017
-  config.vm.forward_port 27018, 27018
+    app.vm.synced_folder "../data", "/srv/data"
 
-  config.vm.share_folder "v-data", "/home/vagrant/data", "../data"
-  config.vm.provision :chef_solo do |chef|
-  config.vm.host_name = "mongo"  
-  chef.add_recipe "mongodb"
+    app.vm.provider "virtualbox" do |v|
+      v.name = "Vagrant Mongo"
+    end
 
+    app.vm.provision :shell, 
+      :inline => "echo http_proxy=\"#{configjson[:proxy][:http_proxy]}\" >> /etc/environment"
 
+    app.vm.provision :chef_solo do |chef|
+      chef.http_proxy = configjson[:proxy][:http_proxy]
+      chef.cookbooks_path = "cookbooks"
+
+      chef.json = configjson
+
+      chef.roles_path = "chef/roles"
+      chef.add_role "dbserver"
+    end
   end
 end
